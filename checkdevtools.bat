@@ -1,8 +1,8 @@
-@echo off
+@ECHO OFF & SETLOCAL
 VER
 ECHO/
 ECHO ----- POWERSHELL
-powershell -Command "$PSVersionTable"
+POWERSHELL -Command "$PSVersionTable"
 ECHO ----- USERPROFILE
 NET user /domain %USERNAME%
 GPRESULT /user %USERNAME% /r
@@ -11,26 +11,30 @@ ECHO ----- ENVIRONMENT
 SET
 SET NOTINPATH=
 SET AVAILABLE=
-CALL :CHECKFOR java -version
-CALL :CHECKFOR javac -version
-CALL :CHECKFOR python -V
-CALL :CHECKFOR git --version
-CALL :CHECKFOR mvn --version
-CALL :CHECKFOR ant --version
-CALL :CHECKFOR gradle --version
-CALL :CHECKFOR bash --version
-CALL :CHECKFOR node --version
-::CALL :CHECKFOR cleartool -version
-::CALL :CHECKFOR rcleartool -version
-
-CALL :CHECKFOR 7z
-CALL :CHECKFOR procexp
-CALL :CHECKFOR robocopy
+CALL :CHECK java -version JAVA_HOME
+CALL :CHECK javac -version
+CALL :CHECK python -V PYTHONPATH
+CALL :CHECK git --version
+::SET GIT_
+CALL :CHECK mvn --version MAVEN_HOME
+CALL :CHECK ant --version ANT_HOME
+CALL :CHECK gradle --version
+CALL :CHECK bash --version
+CALL :CHECK node --version
+CALL :CHECK atom --version ATOM_HOME
+::CALL :CHECK cleartool -version
+::CALL :CHECK rcleartool -version
+CALL :CHECK 7z
+CALL :CHECK procexp
+CALL :CHECK robocopy
 
 ECHO/ 
 ECHO/ 
 
 ECHO ----- TOOL CHECK RESULTS
+CALL :CHECKVARS %PATHVARS%
+ECHO/ 
+ECHO/ 
 IF DEFINED AVAILABLE (
   ECHO AVAILABLE: %AVAILABLE%
 )
@@ -38,67 +42,51 @@ IF DEFINED NOTINPATH (
   ECHO NOTINPATH: %NOTINPATH%
 )
 ECHO/ 
-CALL :CHECKPATH HOME
-CALL :CHECKPATH JAVA_HOME
-CALL :CHECKPATH MAVEN_HOME
-CALL :CHECKPATH ANT_HOME
-
-SET NOTINPATH=
-SET AVAILABLE=
-SET TOCHECK=
-SET VERSION=
-ECHO/
 EXIT /b
 
-:CHECKFOR
-SET TOCHECK=%1
-SET VERSION=%2
+:CHECK
+SET PATHVARS=%PATHVARS% %3
 ECHO/
-ECHO ----- CHECKING FOR "%TOCHECK%"
-WHERE %TOCHECK%
+ECHO ----- CHECKING FOR "%1"
+WHERE %1
 IF ERRORLEVEL 1 (
-  SET NOTINPATH=%NOTINPATH% %TOCHECK%
+  SET NOTINPATH=%NOTINPATH% %1
   EXIT /b
 )
-SET AVAILABLE=%AVAILABLE% %TOCHECK%
-IF "%VERSION%"=="" EXIT /b
-ECHO %TOCHECK% %VERSION%
-CALL %TOCHECK% %VERSION%
+SET AVAILABLE=%AVAILABLE% %1
+IF "%2"=="" EXIT /b
+ECHO %1 %2
+CALL %1 %2
 ECHO/
 EXIT /b
 
-:CHECKPATH
-IF NOT DEFINED %1 (
-  ECHO %1 is NOT DEFINED
-  EXIT /b
-)
-SET _var=%1
-CALL SET _val=%%%1%%%
-IF NOT EXIST %_val% (
-  SET _msg=BUT DIRECTORY DOES NOT EXIST
-  CALL :PATHMSG
-  EXIT /b
-)
-SET _bin=%_val%\bin;
-IF NOT EXIST %_bin% (
-  SET _msg=BUT \bin SUBDIRECTORY DOES NOT EXIST
-  CALL :PATHMSG
-  EXIT /b
-)
-CALL SET _chk=%%PATH:%_bin%=%%
-IF NOT "%PATH%"=="%_chk%" (
- SET _msg=and \bin is on PATH
-) ELSE (
- SET _msg=BUT \bin SUBDIRECTORY IS NOT ON PATH
-)
-CALL :PATHMSG
-EXIT /b
+:CHECKVARS
+IF "%1"=="" EXIT /b
+CALL :CHECKVAR %1
+SHIFT
+GOTO :CHECKVARS
 
-:PATHMSG
-ECHO %_var% = %_val% %_msg%
-SET _var=
-SET _val=
-SET _bin=
-SET _chk=
-SET _msg=
+:CHECKVAR
+ECHO/
+ECHO %1
+IF NOT DEFINED %1 (
+  ECHO    is NOT DEFINED
+  EXIT /b
+)
+CALL SET _dir=%%%1%%%
+ECHO    is %_dir%
+IF NOT EXIST %_dir% (
+  ECHO    BUT DIRECTORY DOES NOT EXIST
+  EXIT /b
+)
+IF NOT EXIST %_dir%\bin (
+  ECHO    BUT \bin SUBDIRECTORY DOES NOT EXIST
+  EXIT /b
+)
+CALL SET _chk=%%PATH:%_dir%\bin=%%
+IF NOT "%PATH%"=="%_chk%" (
+  ECHO    and \bin subdirectory is on PATH
+) ELSE (
+ ECHO     BUT \bin SUBDIRECTORY IS NOT ON PATH
+)
 EXIT /b
