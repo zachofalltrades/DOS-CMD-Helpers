@@ -7,7 +7,7 @@ set _netlocation=%HOMEDRIVE%
 
 call checkdevtools >%_logfile% 2>&1
 call :dirlist %HOMEDRIVE%\install
-call :dirlist C:\3
+call :dirlist %USERPROFILE%\opt
 call :dirlist %USERPROFILE%\bin
 
 copy "%LOCALAPPDATA%\Google\Chrome\User Data\Default\Bookmarks" %USERPROFILE%\Documents\chrome_bookmarks.json

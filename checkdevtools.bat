@@ -18,7 +18,7 @@ CALL :CHECK git --version
 ::SET GIT_
 CALL :CHECK mvn --version MAVEN_HOME
 CALL :CHECK ant --version ANT_HOME
-CALL :CHECK gradle --version
+CALL :CHECK gradle --version GRADLE_HOME
 CALL :CHECK bash --version
 CALL :CHECK node --version
 CALL :CHECK atom --version ATOM_HOME
